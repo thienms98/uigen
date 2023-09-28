@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon --ignore demos/ --ignore .git/ --ignore resources/ index.js",
-    "preview": "cd demos/nextjs13 && yarn dev"
+    "preview": "cd demos/nextjs13 && yarn dev -p 3600"
   },
   "keywords": [],
   "author": "",
