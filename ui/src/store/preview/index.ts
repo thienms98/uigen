@@ -29,6 +29,7 @@ const previewSlice = createSlice({
     addComponentToPosition (state, action:PayloadAction<{component: PreviewItem, position: number}>){
       const {position, component} = action.payload
       state.splice(position, 0, component)   
+      store(state)
     }
   }
 })

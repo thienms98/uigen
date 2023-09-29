@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '@/store';
 import { clearPreview, deleteItem, moveItem } from '@/store/preview';
@@ -14,9 +14,29 @@ export default function Preview(){
   const preview = useSelector((state: RootState) => state.preview);
   const {dragItem, dragOver, draggingComponent} = useSelector((state: RootState) => state.drag);
   
-  const [removeModal, setRemoveModal] = useState<boolean>(false)
   const [clearModal, setClearModal] = useState<boolean>(false)
   const [savingProcess, setSavingProcess] = useState<-1|0|1>(0) // -1: saving, 0:idle, 1:saved
+  const [keyPress, setKeyPress] = useState<string>('')
+
+  useEffect(() => {
+    const keyupEvent = (e:KeyboardEvent) => {
+      e.preventDefault();
+      setKeyPress(e.key)
+    }
+    window.addEventListener('keyup', keyupEvent)
+    return () => {
+      window.removeEventListener('keyup', keyupEvent)
+    }
+  }, [])
+
+  useEffect(() => {
+    if(keyPress === 'S') saveLayout();
+    if(keyPress === 'Delete') setClearModal(prev => !prev);
+    if(keyPress === 'Enter' && clearModal) {
+      dispatch(clearPreview())
+      setClearModal(false)
+    };
+  }, [keyPress])
 
   const saveLayout = () => {
     if(preview.length < 1) return;
@@ -45,29 +65,29 @@ export default function Preview(){
   }
   const saveButton = () => {
     if(savingProcess === 1) return <>Saved</>
-    if(savingProcess === -1) return <>Saving <div className='inline-block animate-spin'>X</div></>
+    if(savingProcess === -1) return <>Saving <div className='inline-block animate-spin'>C</div></>
     return <>Save</>
   }
-  const onDragEnd = (result:any) => console.log(result)
-  const grid = 8
-  const getItemStyle = (isDragging: boolean, draggableStyle: any) => ({
-    // some basic styles to make the items look a bit nicer
-    userSelect: "none",
-    padding: grid * 2,
-    margin: `0 0 ${grid}px 0`,
+  // const onDragEnd = (result:any) => console.log(result)
+  // const grid = 8
+  // const getItemStyle = (isDragging: boolean, draggableStyle: any) => ({
+  //   // some basic styles to make the items look a bit nicer
+  //   userSelect: "none",
+  //   padding: grid * 2,
+  //   margin: `0 0 ${grid}px 0`,
   
-    // change background colour if dragging
-    background: isDragging ? "lightgreen" : "grey",
+  //   // change background colour if dragging
+  //   background: isDragging ? "lightgreen" : "grey",
   
-    // styles we need to apply on draggables
-    ...draggableStyle
-  });
+  //   // styles we need to apply on draggables
+  //   ...draggableStyle
+  // });
   
-  const getListStyle = (isDraggingOver:boolean) => ({
-    background: isDraggingOver ? "lightblue" : "lightgrey",
-    padding: grid,
-    width: 250
-  });
+  // const getListStyle = (isDraggingOver:boolean) => ({
+  //   background: isDraggingOver ? "lightblue" : "lightgrey",
+  //   padding: grid,
+  //   width: 250
+  // });
   return <>
     <div 
       className='flex flex-row-reverse flex-end gap-2 relative shadow-md pb-2 z-20'
@@ -104,7 +124,7 @@ export default function Preview(){
       </>}
     </div>
     <div 
-      className={`h-full overflow-y-auto flex flex-col gap-2 bg-zinc-400/50 px-[10%] xl:px-[17.5%] 3xl:px-[25%] py-5 relative`} 
+      className={`h-full overflow-y-auto flex flex-col gap-2 bg-zinc-400/50 px-[20%] xl:px-[27.5%] 3xl:px-[32.5%] py-5 relative`} 
       style={{scrollbarWidth: 'thin'}}
     >
       {
@@ -113,9 +133,9 @@ export default function Preview(){
           key={`${section}${component}${index}`}
           className={`flex ${dragItem > -1 ? (dragOver < dragItem ? 'flex-col' : 'flex-col-reverse') : 'flex-col'} gap-3`}
         >
-          {dragOver === index && (dragItem > -1 || draggingComponent) && <div className="flex flex-row">
+          {<div className="flex flex-row">
             <div className="basis-[20px]"></div>
-            <div className="flex-1 w-full pt-[45%] border-dotted border-4 border-black"></div>
+            <div className={`flex-1 w-full border-dotted border-black ${dragOver === index && (dragItem > -1 || draggingComponent) ? 'pt-[40%] border-4' : 'pt-0'} transition-all`}></div>
           </div>}
           <div
             className='flex flex-row flex-wrap group'
@@ -124,6 +144,7 @@ export default function Preview(){
               dispatch(setDragItem(index))
             }}
             onDragOver={() => {
+              if(index !== dragOver)
               dispatch(setDragOver(index))
             }}
             onDragEnd={() => {
@@ -197,7 +218,7 @@ export default function Preview(){
       </DragDropContext> */}
     {draggingComponent &&
       <div className="flex flex-row"
-        onDragOver={() => dispatch(setDragOver(preview.length === 0 ? -100 : 100))}
+        onDragOver={() => {if(dragOver < 100 && dragOver > -100) dispatch(setDragOver(preview.length === 0 ? -100 : 100))}}
       >
         <div className="basis-[20px]"></div>
         <div className={`flex-1 w-full pt-[45%] ${(dragOver === 100 || dragOver === -100) && 'border-dotted border-4 border-black'}`}></div>

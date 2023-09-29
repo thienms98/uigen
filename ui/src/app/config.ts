@@ -31,7 +31,7 @@ export const PAGE_SECTIONS:Section[] = [
     key: 'Stats',
     title: 'Stats',
     amount: 3,
-    imageUrl: `${BASE_IMG_URL}/stats.png`
+    imageUrl: `https://tailwindui.com/img/category-thumbnails/application-ui/stats.png`
   },
   {
     key: 'StatsSection',
@@ -88,7 +88,7 @@ export const PAGE_SECTIONS:Section[] = [
     imageUrl: `${BASE_IMG_URL}/logo-clouds.png`
   },
   {
-    key: 'FAQsSection',
+    key: 'FAQs',
     title: 'FAQs',
     amount: 10,
     imageUrl: `${BASE_IMG_URL}/faq-sections.png`

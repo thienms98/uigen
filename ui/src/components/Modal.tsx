@@ -1,5 +1,19 @@
+import {MouseEvent, useEffect, useRef} from 'react'
+
 const Modal = ({children, className='', open, onAccept, onCancel}: {children: React.ReactNode, className?: string, open: boolean, onAccept?: Function, onCancel?: Function}) => {
-  return <div className={`relative ${className}`} >
+  const modalRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const exitModal:EventListener = (e: Event) => {
+      if(modalRef.current && !modalRef.current.contains(e.target as Node)){
+        onCancel && onCancel()
+      }
+    }
+    window.addEventListener('mousedown', exitModal)
+    return () => window.removeEventListener('mousedown', exitModal)
+  }, [])
+
+  return <div className={`relative ${className}`} ref={modalRef} >
     {children}
     {open && <div className="absolute border-[1px] border-black top-full right-0 bg-white p-3 flex flex-row justify-between gap-2">
       <div 
