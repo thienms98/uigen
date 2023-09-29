@@ -13,12 +13,14 @@
     "axios": "^1.5.1",
     "next": "latest",
     "react": "latest",
+    "react-beautiful-dnd": "^13.1.1",
     "react-dom": "latest",
     "react-redux": "^8.1.2"
   },
   "devDependencies": {
     "@types/node": "latest",
     "@types/react": "latest",
+    "@types/react-beautiful-dnd": "^13.1.5",
     "@types/react-dom": "latest",
     "autoprefixer": "latest",
     "eslint": "latest",

@@ -1,10 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
 
 import previewReducer from "./preview";
+import dragReducer from "./drag"
 
 const store = configureStore({
   reducer: {
-    preview: previewReducer
+    preview: previewReducer,
+    drag: dragReducer
   }
 })
 

@@ -4,14 +4,19 @@ import { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '@/store';
 import { clearPreview, deleteItem, moveItem } from '@/store/preview';
+import { setDragItem, setDragOver, setDraggingComponent} from '@/store/drag'
 import axios from 'axios';
+import Modal from './Modal';
+import { Draggable, Droppable, DragDropContext } from 'react-beautiful-dnd';
 
 export default function Preview(){
   const dispatch = useDispatch()
   const preview = useSelector((state: RootState) => state.preview);
-
-  const [dragItem, setDragItem] = useState<number>(-1)
-  const [dragOver, setDragOver] = useState<number>(-1)
+  const {dragItem, dragOver, draggingComponent} = useSelector((state: RootState) => state.drag);
+  
+  const [removeModal, setRemoveModal] = useState<boolean>(false)
+  const [clearModal, setClearModal] = useState<boolean>(false)
+  const [savingProcess, setSavingProcess] = useState<-1|0|1>(0) // -1: saving, 0:idle, 1:saved
 
   const saveLayout = () => {
     if(preview.length < 1) return;
@@ -19,6 +24,7 @@ export default function Preview(){
       layouts: preview.map(({section, component}) => `${section}${component}`)
     })
     console.log(data);
+    setSavingProcess(-1)
     
     axios({
       method: 'post',
@@ -29,62 +35,103 @@ export default function Preview(){
         'Content-Type': 'application/json',
       }
     })
-      .then(() => console.log('ok'))
-      .catch(err => console.log('err'))
+      .then(() => {
+        setSavingProcess(1)
+        setTimeout(() => {
+          setSavingProcess(0)
+        }, 1500);
+      })
+      .catch(err => setSavingProcess(0))
   }
-  let holdToClear:any;
+  const saveButton = () => {
+    if(savingProcess === 1) return <>Saved</>
+    if(savingProcess === -1) return <>Saving <div className='inline-block animate-spin'>X</div></>
+    return <>Save</>
+  }
+  const onDragEnd = (result:any) => console.log(result)
+  const grid = 8
+  const getItemStyle = (isDragging: boolean, draggableStyle: any) => ({
+    // some basic styles to make the items look a bit nicer
+    userSelect: "none",
+    padding: grid * 2,
+    margin: `0 0 ${grid}px 0`,
   
+    // change background colour if dragging
+    background: isDragging ? "lightgreen" : "grey",
+  
+    // styles we need to apply on draggables
+    ...draggableStyle
+  });
+  
+  const getListStyle = (isDraggingOver:boolean) => ({
+    background: isDraggingOver ? "lightblue" : "lightgrey",
+    padding: grid,
+    width: 250
+  });
   return <>
-    <div className='flex flex-row-reverse flex-end gap-2 relative shadow-md pb-2 z-20 '>
+    <div 
+      className='flex flex-row-reverse flex-end gap-2 relative shadow-md pb-2 z-20'
+    >
       <button className='px-4 py-2 rounded-md bg-green-400 hover:bg-green-500 text-white'
         onClick={saveLayout}
-      >Save</button>
-      <button className='px-4 py-2 rounded-md active:bg-red-400 bg-white text-black border-[1px] border-black' style={{transition: 'all 1s ease-in'}}
-        onMouseDown={() => holdToClear = setTimeout(()=>dispatch(clearPreview()), 1000)}
-        onMouseUp={() => clearTimeout(holdToClear)}
-        title='Hold to clear'
-      >Clear</button>
-      {dragItem >= 0 && <>
+      >
+        {saveButton()}
+      </button>
+      <Modal open={clearModal} onAccept={() => {
+        dispatch(clearPreview())
+        setClearModal(false)
+      }} onCancel={() => setClearModal(false)}>
+        <button className='px-4 py-2 rounded-md active:bg-red-400 bg-white text-black border-[1px] border-black' style={{transition: 'all 1s ease-in'}}
+          onClick={()=>setClearModal(true)}
+          title='Hold to clear'
+        >
+          Clear
+        </button>
+      </Modal>
+      {(dragItem >= 0 || draggingComponent) && <>
         <button 
           className='px-4 py-2 rounded-md bg-red-500 text-white justify-self-end  '
-          onDragOver={() => setDragOver(-1)}
+          onDragOver={() => dispatch(setDragOver(-1))}
         >
           Cancel
         </button>
         <button 
           className='px-4 py-2 rounded-md bg-red-500 text-white justify-self-end  '
-          onDragOver={() => setDragOver(-2)}
+          onDragOver={() => dispatch(setDragOver(-2))}
         >
           Remove
         </button>
       </>}
     </div>
-    <div className='h-full overflow-y-auto flex flex-col gap-2 bg-zinc-400/50 px-[10%] py-5 relative' style={{scrollbarWidth: 'thin'}}>
+    <div 
+      className={`h-full overflow-y-auto flex flex-col gap-2 bg-zinc-400/50 px-[10%] xl:px-[17.5%] 3xl:px-[25%] py-5 relative`} 
+      style={{scrollbarWidth: 'thin'}}
+    >
       {
       preview.map(({section, component}, index) => (
         <div
           key={`${section}${component}${index}`}
-          className={`flex ${dragOver < dragItem ? 'flex-col' : 'flex-col-reverse'} gap-3 }`}
+          className={`flex ${dragItem > -1 ? (dragOver < dragItem ? 'flex-col' : 'flex-col-reverse') : 'flex-col'} gap-3`}
         >
-          {dragOver === index && dragItem > -1 && <div className="flex flex-row">
+          {dragOver === index && (dragItem > -1 || draggingComponent) && <div className="flex flex-row">
             <div className="basis-[20px]"></div>
-            <div className="flex-1 min-h-[40px] border-dotted border-4 border-black"></div>
+            <div className="flex-1 w-full pt-[45%] border-dotted border-4 border-black"></div>
           </div>}
           <div
             className='flex flex-row flex-wrap group'
             draggable
             onDragStart={() => {
-              setDragItem(index)
+              dispatch(setDragItem(index))
             }}
             onDragOver={() => {
-              setDragOver(index)
+              dispatch(setDragOver(index))
             }}
             onDragEnd={() => {
               if(dragOver === -2) dispatch(deleteItem({position: dragItem}))
               if(dragOver > -1)
                 dispatch(moveItem({lastPosition: dragItem, nextPosition: dragOver}))
-              setDragItem(-1)
-              setDragOver(-1)
+              dispatch(setDragItem(-1))
+              dispatch(setDragOver(-1))
             }}
           >
             <div className='basis-[20px] invisible group-hover:visible flex flex-col justify-center select-none'>
@@ -117,6 +164,44 @@ export default function Preview(){
           </div>
         </div>
       ))
+    }
+     {/* <DragDropContext onDragEnd={onDragEnd}>
+        <Droppable droppableId="droppable">
+          {(provided, snapshot) => (
+            <div
+              {...provided.droppableProps}
+              ref={provided.innerRef}
+              style={getListStyle(snapshot.isDraggingOver)}
+            >
+              {preview.map((item, index) => (
+                <Draggable key={item.section+item.component} draggableId={item.section+item.component} index={index}>
+                  {(provided, snapshot) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                      style={getItemStyle(
+                        snapshot.isDragging,
+                        provided.draggableProps.style
+                      )}
+                    >
+                      {item.section+item.component}
+                    </div>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext> */}
+    {draggingComponent &&
+      <div className="flex flex-row"
+        onDragOver={() => dispatch(setDragOver(preview.length === 0 ? -100 : 100))}
+      >
+        <div className="basis-[20px]"></div>
+        <div className={`flex-1 w-full pt-[45%] ${(dragOver === 100 || dragOver === -100) && 'border-dotted border-4 border-black'}`}></div>
+      </div>
     }
     </div>
   </>

@@ -1,20 +1,24 @@
+'use client'
+
 import Image from "next/image";
 
 {/*R_IMPORT_START*/}
-          import FeatureSection2 from '@/components/FeatureSection2'
-          import PricingSection3 from '@/components/PricingSection3'
-          import Testimonials3 from '@/components/Testimonials3'
-          import Testimonials2 from '@/components/Testimonials2'
+          import HeroSection2 from '@/components/HeroSection2'
+          import HeroSection4 from '@/components/HeroSection4'
+          import PricingSection8 from '@/components/PricingSection8'
+          import Testimonials6 from '@/components/Testimonials6'
+          import BlogSection6 from '@/components/BlogSection6'
           {/*R_IMPORT_END*/}
 
 export default function Home() {
   return <>
 
 {/*R_CONTENT_START*/}
-          <FeatureSection2 />
-          <PricingSection3 />
-          <Testimonials3 />
-          <Testimonials2 />
+          <HeroSection2 />
+          <HeroSection4 />
+          <PricingSection8 />
+          <Testimonials6 />
+          <BlogSection6 />
           {/*R_CONTENT_END*/}
     
     </>;

@@ -2,12 +2,14 @@ const replace = require("replace-in-file");
 const path = require("path");
 const fs = require("fs-extra");
 const express = require("express");
+var cors = require('cors')
 
 const resourceParentPath = path.join(__dirname, "./resources");
 const resourcePath = path.join(resourceParentPath, "tailwindui");
 const app = express();
 const port = 3232;
 
+app.use(cors())
 app.use(express.json());
 
 app.get("/layouts", async (req, res, next) => {

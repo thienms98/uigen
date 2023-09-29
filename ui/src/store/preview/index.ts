@@ -25,9 +25,13 @@ const previewSlice = createSlice({
     clearPreview (state){
       localStorage.removeItem('preview')
       return []
+    },
+    addComponentToPosition (state, action:PayloadAction<{component: PreviewItem, position: number}>){
+      const {position, component} = action.payload
+      state.splice(position, 0, component)   
     }
   }
 })
 
-export const { addItem, moveItem, deleteItem, clearPreview } = previewSlice.actions
+export const { addItem, moveItem, deleteItem, clearPreview, addComponentToPosition } = previewSlice.actions
 export default previewSlice.reducer
